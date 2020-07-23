@@ -86,12 +86,6 @@ linters:
   #   - goconst
   #   - gocognit
 issues:
-  exclude:
-  # - composite literal uses unkeyed fields
-  # - Using the variable on range scope .* in function literal
-  # - declaration of ".*" shadows declaration at line .*
-  # - only one cuddle assignment allowed before if statement
-  # - func `testAccMongoDBAtlasCloudProviderSnapshotRestoreJobConfigPointInTime` is unused
   exclude-rules:
     - path: _test\.go
       linters:
