@@ -3,7 +3,6 @@ package errtm
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -150,7 +149,6 @@ func NewErrorMessage(c *Config) error {
 		words = append([]string{words[0], strings.ToLower(string(c.Type)), attribute, "in"}, words[2:]...)
 	}
 
-	log.Printf("words: %#+v\n", words)
 	err = strings.Join(words, " ")
 
 	if c.Error != "" {
