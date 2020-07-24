@@ -37,21 +37,21 @@ func TestBasicMessageError(t *testing.T) {
 }
 
 func TestUsingNewErrorMessage_DifferentCRUDTypes(t *testing.T) {
-	errTypes := []errType{Creating, Reading, Updating, Deleting}
+	errStates := []errState{Creating, Reading, Updating, Deleting}
 
-	for _, errType := range errTypes {
-		errType := errType
-		t.Run(string(errType), func(t *testing.T) {
+	for _, errState := range errStates {
+		errState := errState
+		t.Run(string(errState), func(t *testing.T) {
 			t.Parallel()
 
-			expected := fmt.Errorf("error %s TerraformProvider PeeringConnection (5456543433545656): Error processing your request", strings.ToLower(string(errType)))
+			expected := fmt.Errorf("error %s TerraformProvider PeeringConnection (5456543433545656): Error processing your request", strings.ToLower(string(errState)))
 
 			got := NewErrorMessage(&Config{
 				ID:           "5456543433545656",
 				ProviderName: "TerraformProvider",
 				ResourceName: "PeeringConnection",
 				Error:        "Error processing your request",
-				Type:         errType,
+				State:        errState,
 			})
 
 			if diff := deep.Equal(got, expected); diff != nil {
@@ -63,21 +63,21 @@ func TestUsingNewErrorMessage_DifferentCRUDTypes(t *testing.T) {
 
 func TestUsingSetProviderName_DifferentCRUDTypes(t *testing.T) {
 	var (
-		errTypes = []errType{Creating, Reading, Updating, Deleting}
+		errTypes = []errState{Creating, Reading, Updating, Deleting}
 
 		// You can create a template setting some attribute to be used to create other errors
 		err = SetProviderName("MyProvider").SetResourceName("Network Peering Connection")
 	)
 
-	for _, errType := range errTypes {
-		errType := errType
-		t.Run(string(errType), func(t *testing.T) {
+	for _, errState := range errTypes {
+		errState := errState
+		t.Run(string(errState), func(t *testing.T) {
 			t.Parallel()
 
-			expected := fmt.Errorf("error %s MyProvider Network Peering Connection: error 503 server", strings.ToLower(string(errType)))
+			expected := fmt.Errorf("error %s MyProvider Network Peering Connection: error 503 server", strings.ToLower(string(errState)))
 
 			got := err.FillMessage(&Config{
-				Type:  errType,
+				State: errState,
 				Error: "error 503 server",
 			})
 
@@ -87,14 +87,14 @@ func TestUsingSetProviderName_DifferentCRUDTypes(t *testing.T) {
 		})
 	}
 
-	for _, errType := range errTypes {
-		errType := errType
-		t.Run(string(errType), func(t *testing.T) {
+	for _, errState := range errTypes {
+		errState := errState
+		t.Run(string(errState), func(t *testing.T) {
 			t.Parallel()
 
 			var (
-				expected = fmt.Errorf("error %s MyProvider Network Peering Connection: error 503 server", strings.ToLower(string(errType)))
-				got      = err.SetType(errType).SetError("error 503 server").ToError()
+				expected = fmt.Errorf("error %s MyProvider Network Peering Connection: error 503 server", strings.ToLower(string(errState)))
+				got      = err.SetType(errState).SetError("error 503 server").ToError()
 			)
 
 			if diff := deep.Equal(got, expected); diff != nil {
@@ -113,7 +113,7 @@ func TestUsingSettingType(t *testing.T) {
 		ProviderName: "TFProvider",
 		ResourceName: "VM",
 		Error:        "nil pointer",
-		Type:         Setting,
+		State:        Setting,
 		Attribute:    "vm_id",
 	})
 
@@ -127,7 +127,7 @@ func TestUsingSettingType(t *testing.T) {
 	got = globarVar.FillMessage(&Config{
 		ID:        "5456543433545656",
 		Error:     "nil pointer",
-		Type:      Setting,
+		State:     Setting,
 		Attribute: "vm_id",
 	})
 
@@ -145,22 +145,22 @@ func TestUsingSettingType(t *testing.T) {
 
 func TestUsingSomeAttributes_DifferentCRUDTypes(t *testing.T) {
 	var (
-		errTypes = []errType{Creating, Reading, Updating, Deleting}
+		errTypes = []errState{Creating, Reading, Updating, Deleting}
 
 		// You can create a template setting some attribute to be used to create other errors
 		err = SetProviderName("MyProvider").SetResourceName("Network Peering Connection")
 	)
 
-	for _, errType := range errTypes {
-		errType := errType
-		t.Run(string(errType), func(t *testing.T) {
+	for _, errState := range errTypes {
+		errState := errState
+		t.Run(string(errState), func(t *testing.T) {
 			t.Parallel()
 
-			expected := fmt.Errorf("error %s MyProvider Network Peering Connection: error", strings.ToLower(string(errType)))
+			expected := fmt.Errorf("error %s MyProvider Network Peering Connection: error", strings.ToLower(string(errState)))
 
 			got := err.FillMessage(&Config{
 				Error: "error",
-				Type:  errType,
+				State: errState,
 			})
 
 			if diff := deep.Equal(got, expected); diff != nil {
@@ -169,14 +169,14 @@ func TestUsingSomeAttributes_DifferentCRUDTypes(t *testing.T) {
 		})
 	}
 
-	for _, errType := range errTypes {
-		errType := errType
-		t.Run(string(errType), func(t *testing.T) {
+	for _, errState := range errTypes {
+		errState := errState
+		t.Run(string(errState), func(t *testing.T) {
 			t.Parallel()
 
 			var (
-				expected = fmt.Errorf("error %s MyProvider Network Peering Connection: error", strings.ToLower(string(errType)))
-				got      = err.SetType(errType).SetError("error").ToError()
+				expected = fmt.Errorf("error %s MyProvider Network Peering Connection: error", strings.ToLower(string(errState)))
+				got      = err.SetType(errState).SetError("error").ToError()
 			)
 
 			if diff := deep.Equal(got, expected); diff != nil {
@@ -194,7 +194,7 @@ func TestUsingSomeAttributes_SettingType(t *testing.T) {
 		ProviderName: "TFProvider",
 		ResourceName: "VM",
 		Error:        "nil pointer",
-		Type:         Setting,
+		State:        Setting,
 	})
 
 	if diff := deep.Equal(got, expected); diff != nil {
@@ -206,7 +206,7 @@ func TestUsingSomeAttributes_SettingType(t *testing.T) {
 
 	got = globarVar.FillMessage(&Config{
 		Error: "nil pointer",
-		Type:  Setting,
+		State: Setting,
 	})
 
 	if diff := deep.Equal(got, expected); diff != nil {

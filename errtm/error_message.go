@@ -6,29 +6,29 @@ import (
 	"strings"
 )
 
-type errType string
+type errState string
 
 const (
 	// Creating represents the creating state error
-	Creating = errType("CREATING")
+	Creating = errState("CREATING")
 	// Reading represents the read state error
-	Reading = errType("READING")
+	Reading = errState("READING")
 	// Updating represents the updating state error
-	Updating = errType("UPDATING")
+	Updating = errState("UPDATING")
 	// Deleting represents the deleting state error
-	Deleting = errType("DELETING")
+	Deleting = errState("DELETING")
 	// Setting represents the setting state error
-	Setting = errType("SETTING")
+	Setting = errState("SETTING")
 )
 
 // Config represents the struct to create the Terraform error message
 type Config struct {
-	ID           string  // Describes the resource id
-	ProviderName string  // Name of the provider
-	ResourceName string  // Describes the resource name
-	Error        string  // This is the error gave by the server
-	Attribute    string  // This is the attribute that doesn't set correctly
-	Type         errType // It could be one of the following: CREATING, SETTING, DELETING, UPDATING or SETTING
+	ID           string   // Describes the resource id
+	ProviderName string   // Name of the provider
+	ResourceName string   // Describes the resource name
+	Error        string   // This is the error gave by the server
+	Attribute    string   // This is the attribute that doesn't set correctly
+	State        errState // It could be one of the following: CREATING, SETTING, DELETING, UPDATING or SETTING
 }
 
 // SetID sets the ID of the resource
@@ -64,8 +64,8 @@ func (c *Config) SetAttribute(a string) *Config {
 // SetType sets an error type, this depending on which method/circumstance
 // it occurs, we recommend use one of the follows const:
 // Creating, Reading, Updating, Deleting or Setting
-func (c *Config) SetType(a errType) *Config {
-	c.Type = a
+func (c *Config) SetType(a errState) *Config {
+	c.State = a
 	return c
 }
 
@@ -96,8 +96,8 @@ func (c *Config) FillMessage(config *Config) error {
 		c.Attribute = config.Attribute
 	}
 
-	if config.Type != "" {
-		c.Type = config.Type
+	if config.State != "" {
+		c.State = config.State
 	}
 	return NewErrorMessage(c)
 }
@@ -115,9 +115,9 @@ func SetError(err string) *Config {
 // NewErrorMessage builds and creates the error message returning it as error type
 func NewErrorMessage(c *Config) error {
 	var err string
-	words := []string{"error", strings.ToLower(string(c.Type))}
+	words := []string{"error", strings.ToLower(string(c.State))}
 
-	if c.Type == "" {
+	if c.State == "" {
 		words = words[:1]
 		if c.ProviderName != "" || c.ResourceName != "" {
 			words = append(words, "in")
@@ -136,8 +136,8 @@ func NewErrorMessage(c *Config) error {
 		words = append(words, fmt.Sprintf("(%s)", c.ID))
 	}
 
-	if c.Attribute != "" || c.Type == Setting {
-		if c.Type == "" {
+	if c.Attribute != "" || c.State == Setting {
+		if c.State == "" {
 			c.SetType(Setting)
 		}
 
@@ -146,7 +146,7 @@ func NewErrorMessage(c *Config) error {
 			attribute = "an attribute"
 		}
 
-		words = append([]string{words[0], strings.ToLower(string(c.Type)), attribute, "in"}, words[2:]...)
+		words = append([]string{words[0], strings.ToLower(string(c.State)), attribute, "in"}, words[2:]...)
 	}
 
 	err = strings.Join(words, " ")
