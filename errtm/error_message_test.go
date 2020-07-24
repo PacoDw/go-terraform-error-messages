@@ -11,7 +11,7 @@ import (
 
 func TestBasicMessageError(t *testing.T) {
 	var (
-		ms *Config = SetProviderName("MyProvider")
+		ms *Config = SaveProviderName("MyProvider")
 
 		got      = ms.ToError()
 		expected = errors.New("error in MyProvider")
@@ -28,8 +28,8 @@ func TestBasicMessageError(t *testing.T) {
 		t.Errorf("Diff:\n got=%#v\nwant=%#v \n\ndiff=%#v", got, expected, diff)
 	}
 
-	got = SetError("this is my error").ToError()
-	expected = errors.New("error: this is my error")
+	got = ms.SetError("this is my error").ToError()
+	expected = errors.New("error in MyProvider: this is my error")
 
 	if diff := deep.Equal(got, expected); diff != nil {
 		t.Errorf("Diff:\n got=%#v\nwant=%#v \n\ndiff=%#v", got, expected, diff)
@@ -66,19 +66,22 @@ func TestUsingSetProviderName_DifferentCRUDTypes(t *testing.T) {
 		errTypes = []errState{Creating, Reading, Updating, Deleting}
 
 		// You can create a template setting some attribute to be used to create other errors
-		err = SetProviderName("MyProvider").SetResourceName("Network Peering Connection")
+		// Noted the SaveProviderName func will do but SetResourceName will save the value
+		// temporaly, so this means if it uses:  err.SetState(errState).SetError("error 503 server").ToError()
+		// the error will be: error `creating` MyProvider: error 503 server
+		// check the above second test
+		err = SaveProviderName("MyProvider")
 	)
 
 	for _, errState := range errTypes {
 		errState := errState
 		t.Run(string(errState), func(t *testing.T) {
-			t.Parallel()
-
 			expected := fmt.Errorf("error %s MyProvider Network Peering Connection: error 503 server", strings.ToLower(string(errState)))
 
 			got := err.FillMessage(&Config{
-				State: errState,
-				Error: "error 503 server",
+				ResourceName: "Network Peering Connection",
+				State:        errState,
+				Error:        "error 503 server",
 			})
 
 			if diff := deep.Equal(got, expected); diff != nil {
@@ -90,11 +93,23 @@ func TestUsingSetProviderName_DifferentCRUDTypes(t *testing.T) {
 	for _, errState := range errTypes {
 		errState := errState
 		t.Run(string(errState), func(t *testing.T) {
-			t.Parallel()
-
 			var (
-				expected = fmt.Errorf("error %s MyProvider Network Peering Connection: error 503 server", strings.ToLower(string(errState)))
+				expected = fmt.Errorf("error %s MyProvider: error 503 server", strings.ToLower(string(errState)))
 				got      = err.SetState(errState).SetError("error 503 server").ToError()
+			)
+
+			if diff := deep.Equal(got, expected); diff != nil {
+				t.Errorf("Diff:\n got=%#v\nwant=%#v \n\ndiff=%#v", got, expected, diff)
+			}
+		})
+	}
+
+	for _, errState := range errTypes {
+		errState := errState
+		t.Run(string(errState), func(t *testing.T) {
+			var (
+				expected = fmt.Errorf("error %s MyProvider Virtual Machine: error 503 server", strings.ToLower(string(errState)))
+				got      = err.SetResourceName("Virtual Machine").SetState(errState).SetError("error 503 server").ToError()
 			)
 
 			if diff := deep.Equal(got, expected); diff != nil {
@@ -122,7 +137,7 @@ func TestUsingSettingType(t *testing.T) {
 	}
 
 	// You can use a predeterminate global variable to set a default attributes
-	globarVar := SetProviderName("TFProvider").SetResourceName("VM")
+	globarVar := SaveProviderName("TFProvider").SaveResourceName("VM")
 
 	got = globarVar.FillMessage(&Config{
 		ID:        "5456543433545656",
@@ -148,14 +163,12 @@ func TestUsingSomeAttributes_DifferentCRUDTypes(t *testing.T) {
 		errTypes = []errState{Creating, Reading, Updating, Deleting}
 
 		// You can create a template setting some attribute to be used to create other errors
-		err = SetProviderName("MyProvider").SetResourceName("Network Peering Connection")
+		err = SaveProviderName("MyProvider").SaveResourceName("Network Peering Connection")
 	)
 
 	for _, errState := range errTypes {
 		errState := errState
 		t.Run(string(errState), func(t *testing.T) {
-			t.Parallel()
-
 			expected := fmt.Errorf("error %s MyProvider Network Peering Connection: error", strings.ToLower(string(errState)))
 
 			got := err.FillMessage(&Config{
@@ -172,11 +185,9 @@ func TestUsingSomeAttributes_DifferentCRUDTypes(t *testing.T) {
 	for _, errState := range errTypes {
 		errState := errState
 		t.Run(string(errState), func(t *testing.T) {
-			t.Parallel()
-
 			var (
-				expected = fmt.Errorf("error %s MyProvider Network Peering Connection: error", strings.ToLower(string(errState)))
-				got      = err.SetState(errState).SetError("error").ToError()
+				expected = fmt.Errorf("error %s MyProvider VM: error", strings.ToLower(string(errState)))
+				got      = err.SetState(errState).SetResourceName("VM").SetError("error").ToError()
 			)
 
 			if diff := deep.Equal(got, expected); diff != nil {
@@ -202,7 +213,7 @@ func TestUsingSomeAttributes_SettingType(t *testing.T) {
 	}
 
 	// You can use a predeterminate global variable to set a default attributes
-	globarVar := SetProviderName("TFProvider").SetResourceName("VM")
+	globarVar := SaveProviderName("TFProvider").SaveResourceName("VM")
 
 	got = globarVar.FillMessage(&Config{
 		Error: "nil pointer",
