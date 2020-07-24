@@ -1,4 +1,4 @@
-module github.com/PacoDw/go-terraform-error-messages.git
+module github.com/PacoDw/go-terraform-error-messages
 
 go 1.14
 
