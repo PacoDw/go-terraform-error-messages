@@ -61,10 +61,10 @@ func (c *Config) SetAttribute(a string) *Config {
 	return c
 }
 
-// SetType sets an error type, this depending on which method/circumstance
+// SetState sets an error type, this depending on which method/circumstance
 // it occurs, we recommend use one of the follows const:
 // Creating, Reading, Updating, Deleting or Setting
-func (c *Config) SetType(a errState) *Config {
+func (c *Config) SetState(a errState) *Config {
 	c.State = a
 	return c
 }
