@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/spf13/cast"
 )
 
 type errState string
@@ -50,8 +52,8 @@ func (c *Config) SetResourceName(rn string) *Config {
 }
 
 // SetError sets a error message gave by the API
-func (c *Config) SetError(r string) *Config {
-	c.Error = r
+func (c *Config) SetError(e interface{}) *Config {
+	c.Error = cast.ToString(e)
 	return c
 }
 
