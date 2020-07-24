@@ -21,7 +21,7 @@ func TestBasicMessageError(t *testing.T) {
 		t.Errorf("Diff:\n got=%#v\nwant=%#v \n\ndiff=%#v", got, expected, diff)
 	}
 
-	got = ms.SetType(Setting).ToError()
+	got = ms.SetState(Setting).ToError()
 	expected = errors.New("error setting an attribute in MyProvider")
 
 	if diff := deep.Equal(got, expected); diff != nil {
@@ -94,7 +94,7 @@ func TestUsingSetProviderName_DifferentCRUDTypes(t *testing.T) {
 
 			var (
 				expected = fmt.Errorf("error %s MyProvider Network Peering Connection: error 503 server", strings.ToLower(string(errState)))
-				got      = err.SetType(errState).SetError("error 503 server").ToError()
+				got      = err.SetState(errState).SetError("error 503 server").ToError()
 			)
 
 			if diff := deep.Equal(got, expected); diff != nil {
@@ -136,7 +136,7 @@ func TestUsingSettingType(t *testing.T) {
 	}
 
 	// Also you can use ToError function to retrieve the message error
-	got = globarVar.SetID("5456543433545656").SetError("nil pointer").SetType(Setting).SetAttribute("vm_id").ToError()
+	got = globarVar.SetID("5456543433545656").SetError("nil pointer").SetState(Setting).SetAttribute("vm_id").ToError()
 
 	if diff := deep.Equal(got, expected); diff != nil {
 		t.Errorf("Diff:\n got=%#v\nwant=%#v \n\ndiff=%#v", got, expected, diff)
@@ -176,7 +176,7 @@ func TestUsingSomeAttributes_DifferentCRUDTypes(t *testing.T) {
 
 			var (
 				expected = fmt.Errorf("error %s MyProvider Network Peering Connection: error", strings.ToLower(string(errState)))
-				got      = err.SetType(errState).SetError("error").ToError()
+				got      = err.SetState(errState).SetError("error").ToError()
 			)
 
 			if diff := deep.Equal(got, expected); diff != nil {
@@ -214,7 +214,7 @@ func TestUsingSomeAttributes_SettingType(t *testing.T) {
 	}
 
 	// Also you can use ToError function to retrieve the message error
-	got = globarVar.SetError("nil pointer").SetType(Setting).ToError()
+	got = globarVar.SetError("nil pointer").SetState(Setting).ToError()
 
 	if diff := deep.Equal(got, expected); diff != nil {
 		t.Errorf("Diff:\n got=%#v\nwant=%#v \n\ndiff=%#v", got, expected, diff)

@@ -138,7 +138,7 @@ func NewErrorMessage(c *Config) error {
 
 	if c.Attribute != "" || c.State == Setting {
 		if c.State == "" {
-			c.SetType(Setting)
+			c.SetState(Setting)
 		}
 
 		attribute := fmt.Sprintf("attribute `%s`", c.Attribute)
