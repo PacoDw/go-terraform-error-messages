@@ -29,7 +29,7 @@ type Config struct {
 	ID           string   // Describes the resource id
 	ProviderName string   // Name of the provider
 	ResourceName string   // Describes the resource name
-	Error        string   // This is the error gave by the server
+	ErrorMessage string   // This is the error gave by the server
 	Attribute    string   // This is the attribute that doesn't set correctly
 	State        errState // It could be one of the following: CREATING, SETTING, DELETING, UPDATING or SETTING
 
@@ -49,7 +49,8 @@ type Config struct {
 	PartialMode bool
 }
 
-// EnablePartialMode ...
+// EnablePartialMode enables a partial time where is possible to use the Set Methods to create a temporaly error Template
+// so when EnablePartialMode disables all the configuration set after the partial will remove
 func (c *Config) EnablePartialMode(pm bool) *Config {
 	c.PartialMode = pm
 
@@ -95,7 +96,7 @@ func (c *Config) SaveError(e interface{}) *Config {
 	if c.storageConfig == nil {
 		c.storageConfig = &Config{}
 	}
-	c.storageConfig.Error = cast.ToString(e)
+	c.storageConfig.ErrorMessage = cast.ToString(e)
 	return c
 }
 
@@ -109,7 +110,7 @@ func (c *Config) SaveAttribute(a string) *Config {
 }
 
 // SaveState saves an error type in the template configuration to be used in all error messages,
-// the value depending on which method/circunstance
+// the value depending on which method/circumstance
 // it occurs, we recommend use one of the follows const:
 // Creating, Reading, Updating, Deleting or Setting
 func (c *Config) SaveState(a errState) *Config {
@@ -140,7 +141,7 @@ func (c *Config) SetResourceName(rn string) *Config {
 
 // SetError sets a error message gave by the API
 func (c *Config) SetError(e interface{}) *Config {
-	c.Error = cast.ToString(e)
+	c.ErrorMessage = cast.ToString(e)
 	return c
 }
 
@@ -162,7 +163,7 @@ func (c *Config) SetState(s errState) *Config {
 // Note: if you have created a previous Conf Error to be used in all the message
 // and later is used the Set's Method, it will create a new message error
 // copy first the Configuration Error and ovewrite it with the Temporaly configuration Error
-func (c *Config) ToError() error {
+func (c *Config) Error() string {
 	var temp Config = *c
 
 	if c.PartialMode {
@@ -176,14 +177,14 @@ func (c *Config) ToError() error {
 
 	c.cleanConfig()
 
-	return NewErrorMessage(&temp)
+	return NewErrorMessage(&temp).Error()
 }
 
 func (c *Config) cleanConfig() {
 	c.ID = ""
 	c.ProviderName = ""
 	c.ResourceName = ""
-	c.Error = ""
+	c.ErrorMessage = ""
 	c.Attribute = ""
 	c.State = ""
 }
@@ -203,8 +204,8 @@ func fillMessage(c, newConfig *Config) *Config {
 		temp.ResourceName = newConfig.ResourceName
 	}
 
-	if newConfig.Error != "" {
-		temp.Error = newConfig.Error
+	if newConfig.ErrorMessage != "" {
+		temp.ErrorMessage = newConfig.ErrorMessage
 	}
 
 	if newConfig.Attribute != "" {
@@ -241,7 +242,7 @@ func SaveProviderName(pn string) *Config {
 
 // SetError retunrs a Config struct setting the provider name
 func SetError(err string) *Config {
-	return &Config{Error: err, storageConfig: &Config{}}
+	return &Config{ErrorMessage: err, storageConfig: &Config{}}
 }
 
 // NewConfigurationError creates a new Configuration Error
@@ -277,7 +278,7 @@ func NewErrorMessage(c *Config) error {
 
 	if c.Attribute != "" || c.State == Setting {
 		if c.State == "" {
-			c.SetState(Setting)
+			c.State = Setting
 		}
 
 		attribute := fmt.Sprintf("attribute `%s`", c.Attribute)
@@ -290,8 +291,8 @@ func NewErrorMessage(c *Config) error {
 
 	err = strings.Join(words, " ")
 
-	if c.Error != "" {
-		err = fmt.Sprintf("%s: %s", err, c.Error)
+	if c.ErrorMessage != "" {
+		err = fmt.Sprintf("%s: %s", err, c.ErrorMessage)
 	}
 
 	return errors.New(err)
