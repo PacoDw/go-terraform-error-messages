@@ -230,3 +230,30 @@ func TestUsingSomeAttributes_SettingType(t *testing.T) {
 		t.Errorf("Diff:\n got=%#v\nwant=%#v \n\ndiff=%#v", got, expected, diff)
 	}
 }
+
+func TestUsingNewConfigurationErrorFrom(t *testing.T) {
+
+	errm := SaveProviderName("TFProvider").SaveResourceName("VM").SetID("4234234234243").SetError("nil pointer")
+
+	expected := "error in TFProvider VM (4234234234243): nil pointer"
+	got1 := errm.Error()
+
+	if diff := deep.Equal(got1, expected); diff != nil {
+		t.Errorf("Diff:\n got=%#v\nwant=%#v \n\ndiff=%#v", got1, expected, diff)
+	}
+
+	/* You can create a new instance coping the config from other configuration */
+	newError := NewConfigurationErrorFrom(errm).SetError("error 404")
+
+	expected = "error in TFProvider VM: error 404"
+	got2 := newError.Error()
+
+	if diff := deep.Equal(got2, expected); diff != nil {
+		t.Errorf("Diff:\n got=%#v\nwant=%#v \n\ndiff=%#v", got2, expected, diff)
+	}
+
+	// Validate that the first error didn't be rewrited
+	if diff := deep.Equal(got1, got2); diff == nil {
+		t.Errorf("Diff:\n got=%#v\nwant=%#v \n\ndiff=%#v", got1, got2, diff)
+	}
+}
