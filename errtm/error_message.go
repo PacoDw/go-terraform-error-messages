@@ -180,6 +180,22 @@ func (c *Config) Error() string {
 	return NewErrorMessage(&temp).Error()
 }
 
+// FillMessage sets the missing config attributes and returns the error message
+func (c *Config) FillMessage(config *Config) error {
+	var temp Config = *c
+
+	if c.PartialMode {
+		c = c.copyConfig
+		temp = *c.partialConfig
+	}
+
+	t := fillMessage(fillMessage(c.storageConfig, &temp), config)
+
+	c.cleanConfig()
+
+	return NewErrorMessage(t)
+}
+
 func (c *Config) cleanConfig() {
 	c.ID = ""
 	c.ProviderName = ""
@@ -219,22 +235,6 @@ func fillMessage(c, newConfig *Config) *Config {
 	return &temp
 }
 
-// FillMessage sets the missing config attributes and returns the error message
-func (c *Config) FillMessage(config *Config) error {
-	var temp Config = *c
-
-	if c.PartialMode {
-		c = c.copyConfig
-		temp = *c.partialConfig
-	}
-
-	t := fillMessage(fillMessage(c.storageConfig, &temp), config)
-
-	c.cleanConfig()
-
-	return NewErrorMessage(t)
-}
-
 // SaveProviderName retunrs a Config struct setting the provider name
 func SaveProviderName(pn string) *Config {
 	return &Config{storageConfig: &Config{ProviderName: pn}}
@@ -248,6 +248,32 @@ func SetError(err string) *Config {
 // NewConfigurationError creates a new Configuration Error
 func NewConfigurationError() *Config {
 	return &Config{storageConfig: &Config{}}
+}
+
+func copyConfig(c *Config) *Config {
+	newConfig := &Config{}
+	if c != nil {
+		*newConfig = *c
+	}
+	return newConfig
+}
+
+// NewConfigurationErrorFrom creates a new instance from the prevoius configuration,
+// it means the new instance will copy its configuration.
+func NewConfigurationErrorFrom(c *Config) *Config {
+	return &Config{
+		ID:           c.ID,
+		ProviderName: c.ProviderName,
+		ResourceName: c.ResourceName,
+		ErrorMessage: c.ErrorMessage,
+		Attribute:    c.Attribute,
+		State:        c.State,
+
+		storageConfig: copyConfig(c.storageConfig),
+		partialConfig: copyConfig(c.partialConfig),
+		copyConfig:    copyConfig(c.copyConfig),
+		PartialMode:   c.PartialMode,
+	}
 }
 
 // NewErrorMessage builds and creates the error message returning it as error type
